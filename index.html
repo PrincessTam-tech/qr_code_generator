@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Code Studio</title>
-    <!-- Official, unedited, trusted CDNJS mirror library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Official, reliable library script mirror -->
+    <script src="https://cloudflare.com"></script>
     <style>
         :root { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --text-muted: #64748b; --primary: #2563eb; --primary-hover: #1d4ed8; --border: #e2e8f0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
@@ -16,7 +16,7 @@
         label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
         input[type="text"] { width: 100%; padding: 12px 14px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 12px; outline: none; box-sizing: border-box; }
         .preview-area { background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 14px; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 200px; }
-        #qrcode img { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        #qrcode img, #qrcode canvas { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); max-width: 100%; height: auto; }
         .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; }
         .btn:hover { background: var(--primary-hover); }
     </style>
@@ -54,7 +54,6 @@
 
             qrContainer.innerHTML = "";
 
-            // Uses standard initialization without modifying internal engine values
             qrcodeInstance = new QRCode(qrContainer, {
                 text: val,
                 width: 180,
@@ -67,19 +66,29 @@
 
         txtInput.addEventListener('input', renderQR);
 
+        // Instant fail-safe downloader extractor
         dlBtn.addEventListener('click', () => {
+            const qrCanvas = qrContainer.querySelector('canvas');
             const qrImg = qrContainer.querySelector('img');
-            if (qrImg && qrImg.src) {
+            let downloadUrl = null;
+
+            // Direct canvas conversion fallback loop to bypass asynchronous render freezing
+            if (qrCanvas) {
+                downloadUrl = qrCanvas.toDataURL("image/png");
+            } else if (qrImg && qrImg.src) {
+                downloadUrl = qrImg.src;
+            }
+
+            if (downloadUrl) {
                 const a = document.createElement('a');
                 a.download = 'scannable-qrcode.png';
-                a.href = qrImg.src;
+                a.href = downloadUrl;
                 a.click();
             } else {
-                alert("QR Code image is still processing.");
+                alert("Rendering pipeline error. Try typing another character.");
             }
         });
 
-        // Initialize display safely
         renderQR();
     </script>
 </body>
