@@ -4,43 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Advanced QR Code Generator</title>
-    <!-- Tailwind CSS for sleek layout -->
+    <!-- Stable, globally cached Tailwind CSS v3 Play CDN -->
     <script src="https://jsdelivr.net"></script>
-    <!-- EasyQRCodeJS library handles dots styling and center logos cleanly -->
+    <!-- Premium QR Generator Script -->
     <script src="https://jsdelivr.net"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 flex items-center justify-center min-h-screen p-4 md:p-8">
+<body class="bg-slate-100 text-slate-800 flex items-center justify-center min-h-screen p-4 md:p-8">
 
-    <div class="bg-white p-6 md:p-8 rounded-2xl shadow-xl w-full max-w-lg border border-slate-100 flex flex-col md:flex-row gap-6">
+    <div class="bg-white p-6 md:p-8 rounded-2xl shadow-xl w-full max-w-xl border border-slate-200 flex flex-col md:flex-row gap-6">
         
         <!-- Controls Column -->
         <div class="flex-1">
-            <h1 class="text-xl font-bold text-slate-900 mb-1">QR Studio</h1>
+            <h1 class="text-2xl font-bold text-slate-900 mb-1">QR Studio</h1>
             <p class="text-xs text-slate-400 mb-5">GitHub Pages Advanced Version</p>
 
             <!-- Input Box -->
             <div class="mb-4">
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">URL or Text</label>
                 <input type="text" id="qr-text" value="https://github.com" 
-                    class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
             </div>
 
             <!-- Custom Colors -->
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">QR Color</label>
-                    <input type="color" id="qr-color" value="#1e3a8a" class="w-full h-9 p-1 bg-white border border-slate-200 rounded-lg cursor-pointer">
+                    <input type="color" id="qr-color" value="#1e3a8a" class="w-full h-10 p-1 bg-white border border-slate-300 rounded-lg cursor-pointer">
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Background</label>
-                    <input type="color" id="qr-bg" value="#ffffff" class="w-full h-9 p-1 bg-white border border-slate-200 rounded-lg cursor-pointer">
+                    <input type="color" id="qr-bg" value="#ffffff" class="w-full h-10 p-1 bg-white border border-slate-300 rounded-lg cursor-pointer">
                 </div>
             </div>
 
             <!-- Stylized Dot Selection -->
             <div class="mb-4">
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Dot Shape</label>
-                <select id="qr-dot-style" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="qr-dot-style" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="rounded">Modern Rounded Dots</option>
                     <option value="circle">Perfect Circles</option>
                     <option value="clean">Classic Squares</option>
@@ -55,14 +55,14 @@
             </div>
 
             <!-- Action Button -->
-            <button id="download-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl shadow-md shadow-blue-200 transition-all cursor-pointer text-sm text-center block">
+            <button id="download-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl shadow-md transition-all cursor-pointer text-sm text-center block">
                 Download PNG
             </button>
         </div>
 
         <!-- Preview Column -->
-        <div class="w-full md:w-56 flex flex-col items-center justify-center bg-slate-50 p-4 rounded-xl border border-dashed border-slate-200 self-stretch min-h-[220px]">
-            <div id="qrcode" class="p-2 bg-white rounded-lg shadow-sm"></div>
+        <div class="w-full md:w-56 flex flex-col items-center justify-center bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300 self-stretch min-h-[220px]">
+            <div id="qrcode" class="p-2 bg-white rounded-lg shadow-md flex items-center justify-center"></div>
         </div>
 
     </div>
@@ -79,37 +79,29 @@
         let logoBase64 = null;
 
         function generateQR() {
-            // Wipe out current element layout canvas
+            // Completely clear the container element
             qrContainer.innerHTML = "";
             
             const textValue = qrTextInput.value.trim();
             if (!textValue) return;
 
-            // Map custom selection settings to EasyQRCodeJS internal format rules
             let dotScale = 1;
-            
-            if (qrDotStyle.value === 'rounded') {
-                dotScale = 0.8; // creates modern pill/rounded dots appearance
-            } else if (qrDotStyle.value === 'circle') {
-                dotScale = 0.6; // gaps create standalone spheres
-            }
+            if (qrDotStyle.value === 'rounded') dotScale = 0.8;
+            else if (qrDotStyle.value === 'circle') dotScale = 0.6;
 
             const options = {
                 text: textValue,
-                width: 190,
-                height: 190,
+                width: 200,
+                height: 200,
                 colorDark: qrColorInput.value,
                 colorLight: qrBgInput.value,
-                correctLevel: QRCode.CorrectLevel.H, // Keep high backup handling to recover behind center logos
+                correctLevel: QRCode.CorrectLevel.H,
                 dotScale: dotScale,
-                
-                // Advanced built-in style definitions
-                PO: qrColorInput.value, // Position Outer color matching
-                PI: qrColorInput.value, // Position Inner color matching
-                drawer: 'canvas' // Force canvas drawing for seamless extraction
+                PO: qrColorInput.value, 
+                PI: qrColorInput.value,
+                drawer: 'canvas' // Strictly enforce canvas for instant extraction
             };
 
-            // Append base64 embedded asset imagery metadata if local user uploaded a target logo
             if (logoBase64) {
                 options.logo = logoBase64;
                 options.logoWidth = 50;
@@ -118,10 +110,14 @@
                 options.logoBackgroundTransparent = false;
             }
 
-            new QRCode(qrContainer, options);
+            try {
+                new QRCode(qrContainer, options);
+            } catch (err) {
+                console.error("QR Generation error:", err);
+            }
         }
 
-        // Handle uploaded central graphic conversion
+        // Convert images natively to base64
         qrLogoInput.addEventListener('change', function(e) {
             const files = e.target.files;
             if (files && files[0]) {
@@ -137,38 +133,37 @@
             }
         });
 
-        // Instant listeners tracking input fields to render changes seamlessly
+        // Instant reactivity listeners
         qrTextInput.addEventListener('input', generateQR);
         qrColorInput.addEventListener('input', generateQR);
         qrBgInput.addEventListener('input', generateQR);
         qrDotStyle.addEventListener('change', generateQR);
 
-        // Core Image extraction loop
+        // Fail-safe image extraction loop directly grabbing raw data URL from canvas
         downloadBtn.addEventListener('click', () => {
-            // Find generated graphic node inside target layout element
-            const qrCanvas = qrContainer.querySelector('canvas');
-            const qrImg = qrContainer.querySelector('img');
+            const canvas = qrContainer.querySelector('canvas');
             
-            let downloadUrl = null;
-            
-            if (qrCanvas) {
-                downloadUrl = qrCanvas.toDataURL("image/png");
-            } else if (qrImg && qrImg.src && !qrImg.src.includes('data:image/svg+xml')) {
-                downloadUrl = qrImg.src;
-            }
-
-            if (downloadUrl) {
-                const link = document.createElement('a');
-                link.download = 'custom-studio-qrcode.png';
-                link.href = downloadUrl;
-                link.click();
+            if (canvas) {
+                try {
+                    const downloadUrl = canvas.toDataURL("image/png");
+                    const link = document.createElement('a');
+                    link.download = 'qrcode.png';
+                    link.href = downloadUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch (e) {
+                    alert("Security restriction or rendering error. Try refreshing.");
+                }
             } else {
-                alert("QR Code image is still processing. Please type another character to refresh.");
+                alert("QR code element could not be found. Please try typing another character.");
             }
         });
 
-        // Initialize display configuration defaults right away
-        generateQR();
+        // Initialize layout on script loading confirmation
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(generateQR, 300);
+        });
     </script>
 </body>
 </html>
