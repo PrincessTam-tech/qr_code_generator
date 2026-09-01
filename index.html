@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Corporate QR Studio</title>
-    <!-- Official, unedited, trusted EasyQRCodeJS engine - handles logos and shapes natively -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- The exact, unedited CDNJS mirror library that worked perfectly before -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        /* Restored original native layout with your custom brand parameters */
         :root { 
             --bg: #f8fafc; 
             --card: #ffffff; 
@@ -17,7 +18,7 @@
             --border: #e2e8f0; 
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .container { background: var(--card); padding: 32px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); width: 100%; max-width: 440px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 18px; }
+        .container { background: var(--card); padding: 32px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); width: 100%; max-width: 440px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 20px; }
         h1 { margin: 0; font-size: 24px; font-weight: 800; text-align: center; }
         p { margin: 0; font-size: 13px; color: var(--text-muted); text-align: center; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -26,9 +27,18 @@
         input[type="text"]:focus { border-color: var(--primary); }
         .color-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         input[type="color"] { width: 100%; height: 42px; padding: 4px; background: white; border: 1px solid #cbd5e1; border-radius: 10px; cursor: pointer; box-sizing: border-box; }
-        input[type="file"] { font-size: 13px; color: var(--text-muted); }
-        .preview-area { background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 14px; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 200px; }
-        #qrcode img, #qrcode canvas { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); max-width: 100%; height: auto; display: block; margin: 0 auto; }
+        input[type="file"] { font-size: 13px; color: var(--text-muted); cursor: pointer; }
+        
+        /* The container wrapper holding your preview card elements */
+        .preview-area { background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 14px; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 200px; position: relative; }
+        
+        /* Fixed position layer keeping your canvas layout centered and clean */
+        #qrcode-wrapper { position: relative; display: inline-block; background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        #qrcode img, #qrcode canvas { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+        
+        /* The added custom layer keeping your logo centered over the QR canvas matrix */
+        .qr-logo-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 42px; height: 42px; background: white; padding: 3px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: none; object-fit: contain; }
+        
         .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: background 0.2s; text-align: center; }
         .btn:hover { background: var(--primary-hover); }
     </style>
@@ -38,7 +48,7 @@
     <div class="container">
         <div>
             <h1>QR Studio</h1>
-            <p>Official Stable Engine • Custom Branding & Logos</p>
+            <p>Official Stable Engine • Custom Branding</p>
         </div>
 
         <div class="form-group">
@@ -57,14 +67,18 @@
             </div>
         </div>
 
-        <!-- New Logo Upload Group Field -->
+        <!-- Added local files uploading selector field -->
         <div class="form-group">
-            <label>Center Logo (Optional)</label>
-            <input type="file" id="qr-logo" accept="image/*">
+            <label>Add Center Image (Optional)</label>
+            <input type="file" id="qr-logo-upload" accept="image/*">
         </div>
 
         <div class="preview-area">
-            <div id="qrcode"></div>
+            <div id="qrcode-wrapper">
+                <div id="qrcode"></div>
+                <!-- The custom layer image holder element -->
+                <img id="logo-preview" class="qr-logo-overlay" alt="Logo Center">
+            </div>
         </div>
 
         <button id="download-btn" class="btn">Download QR Code</button>
@@ -74,11 +88,12 @@
         const txtInput = document.getElementById('qr-text');
         const colInput = document.getElementById('qr-color');
         const bgInput = document.getElementById('qr-bg');
-        const logoInput = document.getElementById('qr-logo');
+        const logoUpload = document.getElementById('qr-logo-upload');
+        const logoPreview = document.getElementById('logo-preview');
         const qrContainer = document.getElementById('qrcode');
         const dlBtn = document.getElementById('download-btn');
         
-        let logoBase64 = null;
+        let qrcodeInstance = null;
 
         function renderQR() {
             const val = txtInput.value.trim();
@@ -86,78 +101,81 @@
 
             qrContainer.innerHTML = "";
 
-            // Use options supported by the advanced EasyQRCodeJS engine
-            const options = {
+            // Original verified constructor logic from your stable blueprint layout
+            qrcodeInstance = new QRCode(qrContainer, {
                 text: val,
                 width: 180,
                 height: 180,
-                colorDark: colInput.value,
-                colorLight: bgInput.value,
-                correctLevel: QRCode.CorrectLevel.H, // Force Level H to allow center blocking
-                drawer: 'canvas' // Clean render strategy
-            };
-
-            // Inject logo settings if an image is uploaded
-            if (logoBase64) {
-                options.logo = logoBase64;
-                options.logoWidth = 45; // Sets safe dimensions to remain perfectly scannable
-                options.logoHeight = 45;
-                options.logoBackgroundColor = bgInput.value; // Clean padding background mask around logo
-                options.logoBackgroundTransparent = false;
-            }
-
-            try {
-                new QRCode(qrContainer, options);
-            } catch (err) {
-                console.error(err);
-            }
+                colorDark : colInput.value,
+                colorLight : bgInput.value,
+                correctLevel : QRCode.CorrectLevel.H // Level H redundancy permits central image overlays cleanly
+            });
         }
 
-        // Live modification events
-        txtInput.addEventListener('input', renderQR);
-        colInput.addEventListener('input', renderQR);
-        bgInput.addEventListener('input', renderQR);
-
-        // Convert local image uploaded to a Base64 stream string
-        logoInput.addEventListener('change', function(e) {
+        // Handle the file choice upload and set it over the center layer immediately
+        logoUpload.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    logoBase64 = event.target.result;
-                    renderQR();
+                    logoPreview.src = event.target.result;
+                    logoPreview.style.display = 'block'; // Reveal logo element node
                 };
                 reader.readAsDataURL(file);
             } else {
-                logoBase64 = null;
-                renderQR();
+                logoPreview.src = '';
+                logoPreview.style.display = 'none'; // Hide logo element node
             }
         });
 
-        // Fail-safe download handler
+        txtInput.addEventListener('input', renderQR);
+        colInput.addEventListener('input', renderQR);
+        bgInput.addEventListener('input', renderQR);
+
+        // Advanced compound downloader logic to bake the center logo cleanly onto the final PNG
         dlBtn.addEventListener('click', () => {
             const qrCanvas = qrContainer.querySelector('canvas');
-            const qrImg = qrContainer.querySelector('img');
-            let downloadUrl = null;
-
-            if (qrCanvas) {
-                downloadUrl = qrCanvas.toDataURL("image/png");
-            } else if (qrImg && qrImg.src) {
-                downloadUrl = qrImg.src;
+            if (!qrCanvas) {
+                alert("Rendering framework processing. Try typing another character to refresh.");
+                return;
             }
 
-            if (downloadUrl) {
-                const a = document.createElement('a');
-                a.download = 'logo-qrcode.png';
-                a.href = downloadUrl;
-                a.click();
-            } else {
-                alert("Rendering image. Try typing another character to refresh.");
+            // Create an temporary layout canvas to flatten the QR matrix layer and the logo image layer together
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = qrCanvas.width;
+            finalCanvas.height = qrCanvas.height;
+            const finalCtx = finalCanvas.getContext('2d');
+
+            // 1. Draw the restored QR code base layers matrix pixels
+            finalCtx.drawImage(qrCanvas, 0, 0);
+
+            // 2. If a logo is present, draw it over the center vector layer precisely before extraction
+            if (logoPreview.style.display === 'block') {
+                const size = 42; // Set safe dimensions matching CSS
+                const x = (finalCanvas.width - size) / 2;
+                const y = (finalCanvas.height - size) / 2;
+
+                // Draw background white background card wrapper mask underneath the logo icon
+                finalCtx.fillStyle = bgInput.value;
+                finalCtx.beginPath();
+                finalCtx.roundRect(x - 3, y - 3, size + 6, size + 6, 6);
+                finalCtx.fill();
+
+                // Flatten logo icon onto vector scene
+                finalCtx.drawImage(logoPreview, x, y, size, size);
             }
+
+            // 3. Trigger immediate extraction streams loop
+            const downloadUrl = finalCanvas.toDataURL("image/png");
+            const a = document.createElement('a');
+            a.download = 'branded-qrcode.png';
+            a.href = downloadUrl;
+            a.click();
         });
 
-        // Run initial setup
+        // Fire off initialization matching your working blueprint script settings
         renderQR();
     </script>
 </body>
 </html>
+
