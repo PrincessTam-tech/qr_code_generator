@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Corporate QR Studio</title>
+    <!-- The exact, unedited CDNJS mirror library that worked originally -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        /* Modern Native CSS UI Layout matched to your corporate colors */
+        /* Modern Native CSS Layout configured for your company branding colors */
         :root { 
             --bg: #f8fafc; 
             --card: #ffffff; 
@@ -22,10 +24,12 @@
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
         input[type="text"] { width: 100%; padding: 12px 14px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 12px; outline: none; box-sizing: border-box; }
+        input[type="text"]:focus { border-color: var(--primary); }
         .color-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         input[type="color"] { width: 100%; height: 42px; padding: 4px; background: white; border: 1px solid #cbd5e1; border-radius: 10px; cursor: pointer; box-sizing: border-box; }
         .preview-area { background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 14px; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 200px; }
-        canvas { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); max-width: 100%; height: auto; display: block; }
+        /* Style target inside placeholder ensuring container aligns with canvas/images cleanly */
+        #qrcode img, #qrcode canvas { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); max-width: 100%; height: auto; display: block; }
         .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: background 0.2s; text-align: center; }
         .btn:hover { background: var(--primary-hover); }
     </style>
@@ -35,7 +39,7 @@
     <div class="container">
         <div>
             <h1>QR Studio</h1>
-            <p>Production Build • 100% Offline Scannable Engine</p>
+            <p>Official Stable Engine • Custom Branding</p>
         </div>
 
         <div class="form-group">
@@ -46,7 +50,8 @@
         <div class="color-row">
             <div class="form-group">
                 <label>QR Code Color</label>
-                <input type="color" id="qr-color" value="#cc5500"> <!-- Default Burnt Orange -->
+                <!-- Sets your preferred corporate Burnt Orange selection value immediately -->
+                <input type="color" id="qr-color" value="#cc5500">
             </div>
             <div class="form-group">
                 <label>Background Color</label>
@@ -55,100 +60,68 @@
         </div>
 
         <div class="preview-area">
-            <canvas id="qr-canvas"></canvas>
+            <!-- Target element wrapper container where library injects the output elements -->
+            <div id="qrcode"></div>
         </div>
 
         <button id="download-btn" class="btn">Download QR Code</button>
     </div>
 
     <script>
-        // High-fidelity standard baseline matrix allocation module.
-        // It builds the standard layout mapping grids completely offline with absolute precision.
-        const QRMatrixEngine = {
-            generate: function(text) {
-                const size = 25; // Version 2 standardized tracking grid layout
-                const grid = Array(size).fill().map(() => Array(size).fill(false));
-                
-                const addFinder = (y, x) => {
-                    for (let r = 0; r < 7; r++) {
-                        for (let c = 0; c < 7; c++) {
-                            if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
-                                grid[y + r][x + c] = true;
-                            }
-                        }
-                    }
-                };
-                
-                addFinder(0, 0);
-                addFinder(0, size - 7);
-                addFinder(size - 7, 0);
-
-                let hash = 0;
-                for (let i = 0; i < text.length; i++) {
-                    hash = (hash << 5) - hash + text.charCodeAt(i);
-                    hash |= 0;
-                }
-
-                for (let r = 0; r < size; r++) {
-                    for (let c = 0; c < size; c++) {
-                        if ((r < 8 && c < 8) || (r < 8 && c > size - 9) || (r > size - 9 && c < 8)) continue;
-                        const pseudo = Math.abs(Math.sin(r * 12.9 + c * 78.2 + hash)) * 43758.5;
-                        grid[r][c] = (pseudo - Math.floor(pseudo)) > 0.43;
-                    }
-                }
-                
-                for (let i = 8; i < size - 8; i += 2) {
-                    grid[i][6] = true;
-                    grid[6][i] = true;
-                }
-                return grid;
-            }
-        };
-
         const txtInput = document.getElementById('qr-text');
         const colInput = document.getElementById('qr-color');
         const bgInput = document.getElementById('qr-bg');
-        const canvas = document.getElementById('qr-canvas');
+        const qrContainer = document.getElementById('qrcode');
         const dlBtn = document.getElementById('download-btn');
-        const ctx = canvas.getContext('2d');
+        
+        let qrcodeInstance = null;
 
         function renderQR() {
             const val = txtInput.value.trim();
             if (!val) return;
 
-            const grid = QRMatrixEngine.generate(val);
-            const size = grid.length;
-            const cellSize = 10;
-            const padding = 20;
+            // Clear old container children entries completely before regeneration
+            qrContainer.innerHTML = "";
 
-            canvas.width = (size * cellSize) + (padding * 2);
-            canvas.height = (size * cellSize) + (padding * 2);
-
-            ctx.fillStyle = bgInput.value;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = colInput.value;
-            for (let r = 0; r < size; r++) {
-                for (let c = 0; c < size; c++) {
-                    if (grid[r][c]) {
-                        ctx.fillRect(padding + (c * cellSize), padding + (r * cellSize), cellSize, cellSize);
-                    }
-                }
-            }
+            // Uses standard constructor format matching the working blueprint version
+            qrcodeInstance = new QRCode(qrContainer, {
+                text: val,
+                width: 180,
+                height: 180,
+                colorDark : colInput.value,
+                colorLight : bgInput.value,
+                correctLevel : QRCode.CorrectLevel.H
+            });
         }
 
+        // Connect trackers monitoring parameter field input modifications
         txtInput.addEventListener('input', renderQR);
         colInput.addEventListener('input', renderQR);
         bgInput.addEventListener('input', renderQR);
 
+        // Fail-safe dual extractor download execution loops
         dlBtn.addEventListener('click', () => {
-            const url = canvas.toDataURL("image/png");
-            const a = document.createElement('a');
-            a.download = 'scannable-qrcode.png';
-            a.href = url;
-            a.click();
+            const qrCanvas = qrContainer.querySelector('canvas');
+            const qrImg = qrContainer.querySelector('img');
+            let downloadUrl = null;
+
+            if (qrCanvas) {
+                downloadUrl = qrCanvas.toDataURL("image/png");
+            } else if (qrImg && qrImg.src) {
+                downloadUrl = qrImg.src;
+            }
+
+            if (downloadUrl) {
+                const a = document.createElement('a');
+                a.download = 'scannable-qrcode.png';
+                a.href = downloadUrl;
+                a.click();
+            } else {
+                alert("Rendering framework processing. Try typing another character to refresh.");
+            }
         });
 
+        // Instantiate display immediately upon browser thread setup
         renderQR();
     </script>
 </body>
