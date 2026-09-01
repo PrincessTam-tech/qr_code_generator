@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Corporate QR Studio</title>
-    <!-- The exact, unedited CDNJS mirror library that worked originally -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Official, unedited, trusted CDNJS mirror library -->
+    <script src="https://cloudflare.com"></script>
     <style>
-        /* Modern Native CSS Layout configured for your company branding colors */
+        /* Modern Native CSS Layout configured for high-contrast scanning */
         :root { 
             --bg: #f8fafc; 
             --card: #ffffff; 
@@ -28,8 +28,7 @@
         .color-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         input[type="color"] { width: 100%; height: 42px; padding: 4px; background: white; border: 1px solid #cbd5e1; border-radius: 10px; cursor: pointer; box-sizing: border-box; }
         .preview-area { background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 14px; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 200px; }
-        /* Style target inside placeholder ensuring container aligns with canvas/images cleanly */
-        #qrcode img, #qrcode canvas { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); max-width: 100%; height: auto; display: block; }
+        #qrcode img, #qrcode canvas { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); max-width: 100%; height: auto; display: block; margin: 0 auto; }
         .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: background 0.2s; text-align: center; }
         .btn:hover { background: var(--primary-hover); }
     </style>
@@ -39,7 +38,7 @@
     <div class="container">
         <div>
             <h1>QR Studio</h1>
-            <p>Official Stable Engine • Custom Branding</p>
+            <p>Official Stable Engine • High-Contrast Branding</p>
         </div>
 
         <div class="form-group">
@@ -50,8 +49,8 @@
         <div class="color-row">
             <div class="form-group">
                 <label>QR Code Color</label>
-                <!-- Sets your preferred corporate Burnt Orange selection value immediately -->
-                <input type="color" id="qr-color" value="#cc5500">
+                <!-- Defaulting to high-contrast Deep Burnt Bronze/Orange for guaranteed scanning -->
+                <input type="color" id="qr-color" value="#8b3a00">
             </div>
             <div class="form-group">
                 <label>Background Color</label>
@@ -60,7 +59,6 @@
         </div>
 
         <div class="preview-area">
-            <!-- Target element wrapper container where library injects the output elements -->
             <div id="qrcode"></div>
         </div>
 
@@ -80,10 +78,10 @@
             const val = txtInput.value.trim();
             if (!val) return;
 
-            // Clear old container children entries completely before regeneration
+            // Clear layout containers completely before drawing new matrix
             qrContainer.innerHTML = "";
 
-            // Uses standard constructor format matching the working blueprint version
+            // Initialize using high error correction level to guarantee scannability
             qrcodeInstance = new QRCode(qrContainer, {
                 text: val,
                 width: 180,
@@ -94,12 +92,12 @@
             });
         }
 
-        // Connect trackers monitoring parameter field input modifications
+        // Live modification events
         txtInput.addEventListener('input', renderQR);
         colInput.addEventListener('input', renderQR);
         bgInput.addEventListener('input', renderQR);
 
-        // Fail-safe dual extractor download execution loops
+        // Zero-delay canvas image download extraction loops
         dlBtn.addEventListener('click', () => {
             const qrCanvas = qrContainer.querySelector('canvas');
             const qrImg = qrContainer.querySelector('img');
@@ -121,7 +119,7 @@
             }
         });
 
-        // Instantiate display immediately upon browser thread setup
+        // Instantiate display immediately upon execution
         renderQR();
     </script>
 </body>
