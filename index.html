@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Corporate QR Studio</title>
-    <!-- Official, unedited, trusted CDNJS mirror library -->
-    <script src="https://cloudflare.com"></script>
     <style>
         /* Modern Native CSS Layout configured for your company colors */
         :root { 
@@ -28,8 +26,8 @@
         .color-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         input[type="color"] { width: 100%; height: 42px; padding: 4px; background: white; border: 1px solid #cbd5e1; border-radius: 10px; cursor: pointer; box-sizing: border-box; }
         .preview-area { background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 14px; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 200px; }
-        #qrcode img, #qrcode canvas { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); max-width: 100%; height: auto; display: block; }
-        .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: background 0.2s; text-align: center; }
+        #qr-image { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); max-width: 180px; height: auto; display: block; }
+        .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: background 0.2s; text-align: center; display: block; text-decoration: none; box-sizing: border-box; }
         .btn:hover { background: var(--primary-hover); }
     </style>
 </head>
@@ -38,18 +36,17 @@
     <div class="container">
         <div>
             <h1>QR Studio</h1>
-            <p>Official Stable Engine • Custom Branding</p>
+            <p>Production Build • Instant Network Delivery</p>
         </div>
 
         <div class="form-group">
             <label>URL or Text</label>
-            <input type="text" id="qr-text" value="https://github.io">
+            <input type="text" id="qr-text" value="https://princesstam-tech.github.io/due-diligence/japan/">
         </div>
 
         <div class="color-row">
             <div class="form-group">
                 <label>QR Code Color</label>
-                <!-- Default color selection input instantly matching Burnt Orange -->
                 <input type="color" id="qr-color" value="#cc5500">
             </div>
             <div class="form-group">
@@ -59,7 +56,8 @@
         </div>
 
         <div class="preview-area">
-            <div id="qrcode"></div>
+            <!-- Normal image tag that loads cleanly without scripts crashing -->
+            <img id="qr-image" alt="QR Code Preview">
         </div>
 
         <button id="download-btn" class="btn">Download QR Code</button>
@@ -69,58 +67,51 @@
         const txtInput = document.getElementById('qr-text');
         const colInput = document.getElementById('qr-color');
         const bgInput = document.getElementById('qr-bg');
-        const qrContainer = document.getElementById('qrcode');
+        const qrImage = document.getElementById('qr-image');
         const dlBtn = document.getElementById('download-btn');
-        
-        let qrcodeInstance = null;
 
-        function renderQR() {
-            const val = txtInput.value.trim();
-            if (!val) return;
+        function updateQR() {
+            const textValue = encodeURIComponent(txtInput.value.trim());
+            if (!textValue) return;
 
-            // Clear layout containers completely
-            qrContainer.innerHTML = "";
+            // Remove the hash symbol from colors so the API can read them cleanly
+            const darkColor = colInput.value.replace('#', '');
+            const lightColor = bgInput.value.replace('#', '');
 
-            // Call official cdnjs module variables
-            qrcodeInstance = new QRCode(qrContainer, {
-                text: val,
-                width: 180,
-                height: 180,
-                colorDark : colInput.value,
-                colorLight : bgInput.value,
-                correctLevel : QRCode.CorrectLevel.H
-            });
+            // Generates using a highly available, unblockable image link engine
+            const apiUrl = `https://qrserver.com{textValue}&color=${darkColor}&bgcolor=${lightColor}&qzone=1`;
+            
+            // Set the image src directly
+            qrImage.src = apiUrl;
         }
 
-        // Live input change listeners
-        txtInput.addEventListener('input', renderQR);
-        colInput.addEventListener('input', renderQR);
-        bgInput.addEventListener('input', renderQR);
+        // Run live as controls change
+        txtInput.addEventListener('input', updateQR);
+        colInput.addEventListener('input', updateQR);
+        bgInput.addEventListener('input', updateQR);
 
-        // Zero-delay canvas extraction loops for instant downloads
-        dlBtn.addEventListener('click', () => {
-            const qrCanvas = qrContainer.querySelector('canvas');
-            const qrImg = qrContainer.querySelector('img');
-            let downloadUrl = null;
-
-            if (qrCanvas) {
-                downloadUrl = qrCanvas.toDataURL("image/png");
-            } else if (qrImg && qrImg.src) {
-                downloadUrl = qrImg.src;
-            }
-
-            if (downloadUrl) {
-                const a = document.createElement('a');
-                a.download = 'scannable-qrcode.png';
-                a.href = downloadUrl;
-                a.click();
-            } else {
-                alert("Rendering pipeline error. Try typing another character.");
+        // Download by fetching the generated image file data safely
+        dlBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch(qrImage.src);
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = 'scannable-qrcode.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(blobUrl);
+            } catch (error) {
+                // Safe browser fallback window download method if tracking rules block fetch requests
+                window.open(qrImage.src, '_blank');
             }
         });
 
-        // Fire off initial render instantly on page load
-        renderQR();
+        // Initialize instantly on launch
+        updateQR();
     </script>
 </body>
 </html>
